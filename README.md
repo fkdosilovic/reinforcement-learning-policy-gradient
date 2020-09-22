@@ -15,7 +15,8 @@ PyTorch implementations of policy gradient algorithms for DRL.
 
 1. Deep Reinforcement Learning and Control, CMU - [2018](http://www.andrew.cmu.edu/course/10-703/) | [2019](http://www.andrew.cmu.edu/course/10-403/) | [2020](https://cmudeeprl.github.io/703website/)
 2. Deep RL Bootcamp, Berkeley, 2017. - [Site](https://sites.google.com/view/deep-rl-bootcamp/lectures)
-3. Deep Reinforcement Learning | UC Berkeley, CS285 - [Site](http://rail.eecs.berkeley.edu/deeprlcourse/)
+3. Deep Reinforcement Learning, UC Berkeley, CS285 - [Site](http://rail.eecs.berkeley.edu/deeprlcourse/)
+4. Deep Reinforcement Learning, Stanford, CS234 - [Site](http://web.stanford.edu/class/cs234/index.html) 
 
 ### Other:
 
