@@ -1,6 +1,8 @@
 # Reinforcement learning: Policy gradients algorithms
 
-PyTorch implementations of policy gradient algorithms for DRL.
+This repository contains Python implementations of policy gradient algorithms
+used in deep reinforcement learning. Repository is a result of my "Master's Project"
+course.
 
 ## Resources
 
