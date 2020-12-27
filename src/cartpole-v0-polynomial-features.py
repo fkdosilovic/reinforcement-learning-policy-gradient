@@ -5,6 +5,10 @@ from models import MultinomialLogisticRegression
 from sklearn.preprocessing import PolynomialFeatures
 from scipy.special import binom
 
+from rlsim import simulate, evaluate
+from rloptim import vpg_policy_update
+import rleval
+
 degree = 3
 transform = PolynomialFeatures(degree=degree).fit_transform
 
@@ -22,79 +26,50 @@ class Agent:
         probs = self.policy.forward(state).flatten()
         return (np.random.choice(a=self.actions, p=probs), probs)
 
-
-def simulate(env, agent, render=False):
-    traj_states = []
-    traj_probs = []
-    traj_actions = []
-    traj_rewards = []
-
-    prev_state = transform(env.reset().reshape(1, -1))
-    while True:
-        if render:
-            env.render()
-
-        action, probs = agent.sample_action(state=prev_state)
-        next_state, reward, is_terminal, _ = env.step(action)
-
-        traj_states.append(prev_state)
-        traj_probs.append(probs)
-        traj_actions.append(action)
-        traj_rewards.append(reward)
-
-        if is_terminal:
-            break
-
-        prev_state = transform(next_state.reshape(1, -1))
-
-    return (traj_states, traj_probs, traj_actions, traj_rewards)
-
-
-def compute_reward_to_go(rewards):
-    rewards = np.array(rewards)[::-1]
-    return np.cumsum(rewards)[::-1]
-
-
-def policy_update(episode_batch, agent, learning_rate: float = 0.0025):
-    dw = np.zeros_like(agent.policy.w)
-
-    for i, (states, probs, actions, rewards) in enumerate(episode_batch):
-        assert len(probs) == len(actions) == len(rewards)
-
-        rewards_to_go = compute_reward_to_go(rewards)
-        for i, (state, prob, action) in enumerate(zip(states, probs, actions)):
-            e = np.zeros(agent.n_actions)
-            e[action] = 1
-
-            dw += agent.policy.grad_w(e, prob, state) * rewards_to_go[i]
-
-    dw /= len(episode_batch)
-
-    agent.policy.w += learning_rate * dw
+    def choose_action(self, state):
+        """Selects action with the highest probability."""
+        return self.policy.predict(state)
 
 
 def main():
     env = gym.make("CartPole-v0")
-    agent = Agent(n_features=int(binom(4 + degree, degree)), n_actions=2)
 
-    n_episodes = 70
-    mb_size = 32
-    episode_dbg = 20
+    observation_space_d = np.product(env.observation_space.shape)
+    action_space_d = env.action_space.n
+    n_features = int(binom(observation_space_d + degree, degree))
 
-    for episode in range(n_episodes):
-        batch = [simulate(env, agent) for _ in range(mb_size)]
-        policy_update(batch, agent)
+    agent = Agent(n_features=n_features, n_actions=action_space_d)
+
+    n_epochs = 25
+    mb_size = 16
+    episode_dbg = 10
+
+    for epoch in range(n_epochs):
+        batch = [simulate(env, agent, transform) for _ in range(mb_size)]
+        vpg_policy_update(batch, agent, learning_rate=0.035)
 
         average_return = sum(
             [sum(rewards) for _, _, _, rewards in batch]
         ) / len(batch)
 
-        print(f"Average return: {average_return}")
+        print(f"Average return for {epoch + 1}th epoch is {average_return}.")
 
-        if episode % episode_dbg == 0:
-            simulate(env, agent, True)
+        if epoch % episode_dbg == 0:
+            simulate(env, agent, transform, True)
 
-    simulate(env, agent, True)
+    simulate(env, agent, transform, True)
+
+    if evaluate(
+        env,
+        agent,
+        rleval.CARTPOLE_V0_EPISODES,
+        rleval.check_cartpole_v0,
+        transform,
+    ):
+        print("You've successfully solved the environment.")
+    else:
+        print("You did not solve the environment.")
+
     env.close()
 
 
