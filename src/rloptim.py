@@ -1,14 +1,7 @@
+import torch
+from torch import distributions
+
 import numpy as np
-
-rms_accum_grad = None
-
-
-def compute_reward_to_go(rewards):
-    if not isinstance(rewards, np.ndarray):
-        rewards = np.array(rewards)
-
-    rewards = rewards[::-1]
-    return np.cumsum(rewards)[::-1]
 
 
 def compute_time_dependent_baseline(rewards_batch):
@@ -23,38 +16,51 @@ def compute_time_dependent_baseline(rewards_batch):
     return baselines
 
 
-def vpg_policy_update(
-    episode_batch,
+def compute_reward_to_go(rewards, gamma: float = 1.0):
+    if not isinstance(rewards, torch.Tensor):
+        rewards = torch.as_tensor(rewards, dtype=torch.float32)
+
+    rewards = torch.flip(rewards, dims=(0,))
+
+    cumm_sum = torch.zeros_like(rewards)
+    cumm_sum[0] = rewards[0]
+    for i, reward in enumerate(rewards[1:]):
+        cumm_sum[i + 1] = reward + gamma * cumm_sum[i]
+
+    return torch.flip(cumm_sum, dims=(0,))
+
+
+def policy_update(
+    batch,
     agent,
-    learning_rate: float = 0.001,
-    rho: float = 0.9,
-    epsilon: float = 1e-8,
+    optimizer,
+    gamma: float = 1.0,
 ):
-    baselines = compute_time_dependent_baseline(
-        [rewards for _, _, _, rewards in episode_batch]
-    )
+    loss = 0
+    for (_, episode_probs, episode_actions, episode_rewards) in batch:
+        assert (
+            len(episode_probs) == len(episode_actions) == len(episode_rewards)
+        )
 
-    dw = np.zeros_like(agent.policy.w)
-    for i, (states, probs, actions, rewards) in enumerate(episode_batch):
-        # assert len(probs) == len(actions) == len(rewards)
+        # Compute rewards_to_go
+        rewards_to_go = compute_reward_to_go(episode_rewards, gamma)
 
-        rewards_to_go = compute_reward_to_go(rewards)
-        for i, (state, prob, action) in enumerate(zip(states, probs, actions)):
-            e = np.zeros(agent.n_actions)
-            e[action] = 1
+        # Since Var(X - E[X]) = Var(X), we can standardize the rewards by
+        # writing:
+        rewards_to_go -= torch.mean(rewards_to_go)
+        rewards_to_go /= torch.std(rewards_to_go)  # Possible division by zero!
 
-            dw += agent.policy.grad_w(e, prob, state) * (
-                rewards_to_go[i] - baselines[i]
-            )
+        episode_probs_action = zip(episode_probs, episode_actions)
+        for i, (action_probs, action) in enumerate(episode_probs_action):
+            dist = distributions.Categorical(probs=action_probs)
+            advantage = rewards_to_go[i]
+            loss += -dist.log_prob(action) * advantage
 
-    dw /= len(episode_batch)
+    # Clear gradients.
+    optimizer.zero_grad()
 
-    # RMSProp accumulation step.
-    global rms_accum_grad
-    if rms_accum_grad is None:
-        print(rms_accum_grad)
-        rms_accum_grad = np.zeros_like(agent.policy.w)
-    rms_accum_grad = rho * rms_accum_grad + (1 - rho) * (dw * dw)
+    # Compute gradients.
+    loss.backward()
 
-    # Policy update.
-    agent.policy.w += (learning_rate / np.sqrt(epsilon + rms_accum_grad)) * dw
+    # Gradient descent.
+    optimizer.step()
