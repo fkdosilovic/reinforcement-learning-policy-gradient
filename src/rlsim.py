@@ -39,8 +39,8 @@ def evaluate(env, agent, episodes, check_score):
 
         prev_state = env.reset().reshape(1, -1)
         while True:
-            action = agent.choose_action(state=prev_state)
-            next_state, reward, is_terminal, _ = env.step(action)
+            action, _ = agent.choose_action(state=prev_state)
+            next_state, reward, is_terminal, _ = env.step(action.item())
             rewards.append(reward)
 
             if is_terminal:
