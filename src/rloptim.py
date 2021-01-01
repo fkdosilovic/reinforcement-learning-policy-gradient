@@ -4,18 +4,6 @@ from torch import distributions
 import numpy as np
 
 
-def compute_time_dependent_baseline(rewards_batch):
-    max_len = max(map(len, rewards_batch))
-
-    rewards = np.array(
-        [rwds + [0] * (max_len - len(rwds)) for rwds in rewards_batch]
-    )
-
-    m = len(rewards_batch)
-    baselines = compute_reward_to_go(np.sum(rewards, axis=0)) / m
-    return baselines
-
-
 def compute_reward_to_go(rewards, gamma: float = 1.0):
     if not isinstance(rewards, torch.Tensor):
         rewards = torch.as_tensor(rewards, dtype=torch.float32)
@@ -30,16 +18,34 @@ def compute_reward_to_go(rewards, gamma: float = 1.0):
     return torch.flip(cumm_sum, dims=(0,))
 
 
+# def compute_baseline(rewards_batch):
+#     max_len = max(map(len, rewards_batch))
+
+#     rewards = torch.FloatTensor(
+#         [rwds + [0] * (max_len - len(rwds)) for rwds in rewards_batch]
+#     )
+
+#     m = len(rewards_batch)
+#     baselines = compute_reward_to_go(torch.sum(rewards, axis=0)) / m
+#     return baselines
+
+
 def policy_update(
     batch,
     agent,
     optimizer,
     gamma: float = 1.0,
 ):
+    # baseline = compute_baseline([rewards for _, _, _, rewards in batch])
+
+    # # Normalize.
+    # baseline -= torch.mean(baseline)
+    # baseline /= torch.std(baseline)  # Possible division by zero!
+
     loss = 0
-    for (_, episode_probs, episode_actions, episode_rewards) in batch:
+    for (_, episode_actions, episode_probs, episode_rewards) in batch:
         assert (
-            len(episode_probs) == len(episode_actions) == len(episode_rewards)
+            len(episode_actions) == len(episode_probs) == len(episode_rewards)
         )
 
         # Compute rewards_to_go

@@ -3,8 +3,9 @@ import numpy as np
 from scipy.special import binom
 from torch import optim
 
+import rlstats
 import rleval
-from rlsim import simulate, evaluate
+import rlsim
 from rloptim import policy_update
 from agent import LinearAgent
 
@@ -24,31 +25,38 @@ def main():
         transform_degree=degree,
     )
 
-    optimizer = optim.RMSprop(agent.policy.parameters(), lr=0.025)
+    optimizer = optim.RMSprop(agent.policy.parameters(), lr=0.05)
 
-    n_epochs = 20
-    mb_size = 16
+    n_epochs = 30
+    mb_size = 8
     episode_dbg = 10
 
     for epoch in range(n_epochs):
-        batch = [simulate(env, agent) for _ in range(mb_size)]
+        batch = [rlsim.simulate(env, agent) for _ in range(mb_size)]
         policy_update(batch, agent, optimizer)
 
-        average_return = sum(
-            [sum(rewards) for _, _, _, rewards in batch]
-        ) / len(batch)
+        average_return = rlstats.calc_average_return(
+            [eps_rewards for _, _, _, eps_rewards in batch]
+        )
 
-        print(f"Average return for {epoch + 1}th epoch is {average_return}.")
+        average_entropy = rlstats.calc_average_entropy(
+            [episode_probs for _, _, episode_probs, _ in batch]
+        )
+
+        print(
+            f"Average return for {epoch + 1}th epoch is {average_return} \
+with average entropy of {average_entropy}."
+        )
 
         if epoch % episode_dbg == 0:
-            simulate(env, agent, True)
+            rlsim.simulate(env, agent, True)
 
-    simulate(env, agent, True)
+    rlsim.simulate(env, agent, True)
 
     # for param in agent.policy.parameters():
     #     print(param.data)
 
-    if evaluate(
+    if rleval.evaluate(
         env,
         agent,
         rleval.CARTPOLE_V0_EPISODES,
