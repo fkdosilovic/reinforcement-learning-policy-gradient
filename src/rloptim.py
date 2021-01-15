@@ -1,8 +1,6 @@
 import torch
 from torch import distributions
 
-import numpy as np
-
 
 def compute_reward_to_go(rewards, gamma: float = 1.0):
     if not isinstance(rewards, torch.Tensor):
@@ -48,7 +46,7 @@ def policy_update(
             len(episode_actions) == len(episode_probs) == len(episode_rewards)
         )
 
-        # Compute rewards_to_go
+        # Compute rewards-to-go.
         rewards_to_go = compute_reward_to_go(episode_rewards, gamma)
 
         # Since Var(X - E[X]) = Var(X), we can standardize the rewards by

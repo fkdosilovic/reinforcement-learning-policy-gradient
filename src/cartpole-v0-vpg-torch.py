@@ -1,13 +1,13 @@
 import gym
 import numpy as np
-from scipy.special import binom
 from torch import optim
 
 import rlstats
 import rleval
 import rlsim
+import rlutils
 from rloptim import policy_update
-from agent import LinearAgent
+from agent import DiscreteLinearAgent
 
 
 def main():
@@ -17,17 +17,16 @@ def main():
 
     observation_space_d = np.product(env.observation_space.shape)
     action_space_d = env.action_space.n
-    n_features = int(binom(observation_space_d + degree, degree))
 
-    agent = LinearAgent(
-        n_features=n_features,
+    agent = DiscreteLinearAgent(
+        n_features=observation_space_d,
         n_actions=action_space_d,
-        transform_degree=degree,
+        degree=degree,
     )
 
     optimizer = optim.RMSprop(agent.policy.parameters(), lr=0.05)
 
-    n_epochs = 30
+    n_epochs = 25
     mb_size = 8
     episode_dbg = 10
 
@@ -36,11 +35,11 @@ def main():
         policy_update(batch, agent, optimizer)
 
         average_return = rlstats.calc_average_return(
-            [eps_rewards for _, _, _, eps_rewards in batch]
+            rlutils.extract_rewards(batch)
         )
 
         average_entropy = rlstats.calc_average_entropy(
-            [episode_probs for _, _, episode_probs, _ in batch]
+            rlutils.extract_action_probs(batch)
         )
 
         print(

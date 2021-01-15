@@ -2,29 +2,19 @@ import torch
 import numpy as np
 
 from sklearn.preprocessing import PolynomialFeatures
+from scipy.special import binom
 
 
-def _transform(degree: int = 1):
-    return PolynomialFeatures(degree=degree).fit_transform
-
-
-class LinearAgent:
-    def __init__(
-        self,
-        n_features: int,
-        n_actions: int,
-        transform_degree: int = 1,
-    ):
-        self.transform = _transform(degree=transform_degree)
+class DiscreteLinearAgent:
+    def __init__(self, n_features, n_actions, degree=1):
+        n_features = int(binom(n_features + degree, degree))
         self.policy = torch.nn.Sequential(
-            torch.nn.Linear(
-                in_features=n_features,
-                out_features=n_actions,
-                bias=False,
-            ),
+            torch.nn.Linear(n_features, n_actions, bias=False),
             torch.nn.Softmax(dim=1),
             torch.nn.Flatten(start_dim=0),
         )
+
+        self.transform = PolynomialFeatures(degree=degree).fit_transform
 
     def sample_action(self, state: np.ndarray):
         """Samples an action."""
