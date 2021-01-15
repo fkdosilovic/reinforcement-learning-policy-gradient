@@ -5,15 +5,15 @@ from sklearn.preprocessing import PolynomialFeatures
 from scipy.special import binom
 
 
-def __create_multilayer_perceptron(layers_dim):
+def create_multilayer_perceptron(layers_dim):
     layers = []
-    for i, layer_d in layers_dim[1:]:
+    for i, layer_d in enumerate(layers_dim[1:]):
         layers.append(torch.nn.Linear(layers_dim[i], layer_d))
         layers.append(torch.nn.ReLU(inplace=True))
 
     layers = layers[:-1]  # Remove the ReLU after the output layer.
     layers.append(torch.nn.Softmax(dim=1))
-    layers.append(torch.Flatten(start_dim=0))
+    layers.append(torch.nn.Flatten(start_dim=0))
 
     return torch.nn.Sequential(*layers)
 
@@ -51,7 +51,7 @@ class DiscreteMLPAgent:
     """Implements an agent with neural network policy."""
 
     def __init__(self, layers):
-        self.policy = __create_multilayer_perceptron(layers)
+        self.policy = create_multilayer_perceptron(layers)
 
     def sample_action(self, state):
         """Samples an action."""
@@ -63,6 +63,6 @@ class DiscreteMLPAgent:
 
     def choose_action(self, state):
         if not isinstance(state, torch.Tensor):
-            state = torch.as_tensor(state, dytpe=torch.float32)
+            state = torch.as_tensor(state, dtype=torch.float32)
 
         return torch.argmax(self.policy(state)), None
