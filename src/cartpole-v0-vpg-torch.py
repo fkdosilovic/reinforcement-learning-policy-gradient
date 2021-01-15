@@ -26,13 +26,13 @@ def main():
 
     optimizer = optim.RMSprop(agent.policy.parameters(), lr=0.05)
 
-    n_epochs = 25
+    n_epochs = 20
     mb_size = 8
     episode_dbg = 10
 
     for epoch in range(n_epochs):
         batch = [rlsim.simulate(env, agent) for _ in range(mb_size)]
-        policy_update(batch, agent, optimizer)
+        policy_update(batch, agent, optimizer, 0.95)
 
         average_return = rlstats.calc_average_return(
             rlutils.extract_rewards(batch)

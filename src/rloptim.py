@@ -16,16 +16,16 @@ def compute_reward_to_go(rewards, gamma: float = 1.0):
     return torch.flip(cumm_sum, dims=(0,))
 
 
-# def compute_baseline(rewards_batch):
-#     max_len = max(map(len, rewards_batch))
+def compute_baseline(rewards_batch, gamma=1.0):
+    max_len = max(map(len, rewards_batch))
 
-#     rewards = torch.FloatTensor(
-#         [rwds + [0] * (max_len - len(rwds)) for rwds in rewards_batch]
-#     )
+    rewards = torch.FloatTensor(
+        [rwds + [0] * (max_len - len(rwds)) for rwds in rewards_batch]
+    )
 
-#     m = len(rewards_batch)
-#     baselines = compute_reward_to_go(torch.sum(rewards, axis=0)) / m
-#     return baselines
+    m = len(rewards_batch)
+    baselines = compute_reward_to_go(torch.sum(rewards, axis=0), gamma) / m
+    return baselines
 
 
 def policy_update(
@@ -34,30 +34,27 @@ def policy_update(
     optimizer,
     gamma: float = 1.0,
 ):
-    # baseline = compute_baseline([rewards for _, _, _, rewards in batch])
+    baseline = compute_baseline([rewards for _, _, _, rewards in batch], gamma)
 
-    # # Normalize.
-    # baseline -= torch.mean(baseline)
-    # baseline /= torch.std(baseline)  # Possible division by zero!
+    # Since Var(X - E[X]) = Var(X), we can standardize the baseline by
+    # writing:
+    baseline -= torch.mean(baseline)
+    baseline /= torch.std(baseline)  # Possible division by zero!
 
     loss = 0
-    for (_, episode_actions, episode_probs, episode_rewards) in batch:
-        assert (
-            len(episode_actions) == len(episode_probs) == len(episode_rewards)
-        )
+    for (_, eps_actions, eps_probs, eps_rewards) in batch:
+        assert len(eps_actions) == len(eps_probs) == len(eps_rewards)
 
         # Compute rewards-to-go.
-        rewards_to_go = compute_reward_to_go(episode_rewards, gamma)
+        rewards_to_go = compute_reward_to_go(eps_rewards, gamma)
 
-        # Since Var(X - E[X]) = Var(X), we can standardize the rewards by
-        # writing:
         rewards_to_go -= torch.mean(rewards_to_go)
         rewards_to_go /= torch.std(rewards_to_go)  # Possible division by zero!
 
-        episode_probs_action = zip(episode_probs, episode_actions)
+        episode_probs_action = zip(eps_probs, eps_actions)
         for i, (action_probs, action) in enumerate(episode_probs_action):
             dist = distributions.Categorical(probs=action_probs)
-            advantage = rewards_to_go[i]
+            advantage = rewards_to_go[i] - baseline[i]
             loss += -dist.log_prob(action) * advantage
 
     # Clear gradients.
