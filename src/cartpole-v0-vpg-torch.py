@@ -73,6 +73,10 @@ with average entropy of {average_entropy:.2f}."
         if epoch % n_dbg == 0:
             rlsim.simulate(env, agent, True)
 
+        if average_entropy < params["min_entropy"]:
+            print("Your agent's policy achieved desired entropy.")
+            break
+
     rlsim.simulate(env, agent, True)
 
     # Save logs.

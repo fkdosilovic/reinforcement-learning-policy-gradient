@@ -4,6 +4,15 @@ This repository contains Python implementations of policy gradient algorithms
 used in deep reinforcement learning. Repository is a result of my "Master's Project"
 course.
 
+## Results
+
+### CartPole-v0
+
+The following figures show results for two runs of vanilla policy gradient algorithm.
+
+![CartPole-v0 first results](static/cartpole_v0_stats1.png)
+![CartPole-v0 first results](static/cartpole_v0_stats2.png)
+
 ## Resources
 
 ### Papers:
