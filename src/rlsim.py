@@ -8,14 +8,12 @@ def simulate(
     traj_probs = []
     traj_rewards = []
 
-    choose_action = agent.choose_action if render else agent.sample_action
-
     prev_state = env.reset().reshape(1, -1)
     while True:
         if render:
             env.render()
 
-        action, probs = choose_action(state=prev_state)
+        action, probs = agent.sample_action(state=prev_state)
         next_state, reward, is_terminal, _ = env.step(action.item())
 
         traj_states.append(prev_state)

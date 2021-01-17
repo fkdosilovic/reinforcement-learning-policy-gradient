@@ -1,12 +1,14 @@
 import gym
 import numpy as np
+
 from torch import optim
 
 import rlstats
 import rleval
 import rlsim
 import rlutils
-from rloptim import policy_update
+import rloptim
+
 from agent import DiscreteLinearAgent
 
 
@@ -27,12 +29,12 @@ def main():
     optimizer = optim.RMSprop(agent.policy.parameters(), lr=0.05)
 
     n_epochs = 20
-    mb_size = 8
+    mb_size = 16
     episode_dbg = 10
 
     for epoch in range(n_epochs):
         batch = [rlsim.simulate(env, agent) for _ in range(mb_size)]
-        policy_update(batch, agent, optimizer, 0.95)
+        rloptim.vpg(batch, agent, optimizer, 0.99)
 
         average_return = rlstats.calc_average_return(
             rlutils.extract_rewards(batch)
@@ -43,8 +45,8 @@ def main():
         )
 
         print(
-            f"Average return for {epoch + 1}th epoch is {average_return} \
-with average entropy of {average_entropy}."
+            f"Average return for {epoch}th epoch is {average_return:.2f} \
+with average entropy of {average_entropy:.2f}."
         )
 
         if epoch % episode_dbg == 0:

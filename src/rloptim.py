@@ -28,12 +28,7 @@ def compute_baseline(rewards_batch, gamma=1.0):
     return baselines
 
 
-def policy_update(
-    batch,
-    agent,
-    optimizer,
-    gamma: float = 1.0,
-):
+def vpg(batch, agent, optimizer, gamma=1.0):
     baseline = compute_baseline([rewards for _, _, _, rewards in batch], gamma)
 
     # Since Var(X - E[X]) = Var(X), we can standardize the baseline by
