@@ -1,0 +1,14 @@
+env: "CartPole-v0"
+logs: "cartpole_v0_logs.json"
+
+degree: 1
+gamma: 0.99
+
+lr: 0.05
+n_epochs: 25
+batch_size: 16
+n_dbg: 10
+
+min_entropy: 0.5 # Choose optimal action in 80% of the cases.
+max_entropy: 0.693
+n_avg: 5
