@@ -32,7 +32,7 @@ def main(params_yaml_path):
 
     observation_space_d = np.product(env.observation_space.shape)
     action_space_d = np.product(env.action_space.n)
-    layers = [observation_space_d, 64, 64, action_space_d]
+    layers = [observation_space_d, *params["hidden_layers"], action_space_d]
 
     agent = DiscreteMLPAgent(layers)
     optimizer = optim.RMSprop(agent.policy.parameters(), lr=params["lr"])

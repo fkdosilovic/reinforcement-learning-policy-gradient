@@ -1,7 +1,0 @@
-layers: [8, 96, 96, 96, 4]
-learning_rate: 0.001
-weight_decay: 0.005
-
-n_epochs: 200
-mb_size: 32
-n_dbg: 20
