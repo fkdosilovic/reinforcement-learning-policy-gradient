@@ -12,3 +12,5 @@ n_dbg: 20
 min_entropy: 0.435 # Choose optimal action in 90% of the cases.
 max_entropy: 1.386
 n_avg: 10
+
+model: "lunarlander2_v2_220_216.94.pth"
