@@ -26,10 +26,11 @@ def plot_running_return_stats(ax, epochs, mu, n_avg):
 def plot_return_stats(params, ax, logs, plot_running_return=True):
     epochs = list(range(1, len(logs) + 1))
 
-    rewards = [
-        [np.sum(eps_rewards) for eps_rewards in epoch["rewards"]]
-        for epoch in logs
-    ]
+    # rewards = [
+    #     [np.sum(eps_rewards) for eps_rewards in epoch["rewards"]]
+    #     for epoch in logs
+    # ]
+    rewards = [epoch["rewards"] for epoch in logs]
 
     mu = np.array([np.mean(row) for row in rewards])
     sigma = np.array([np.std(row) for row in rewards])
@@ -49,10 +50,11 @@ def plot_return_stats(params, ax, logs, plot_running_return=True):
 def plot_entropy_stats(params, ax, logs):
     epochs = list(range(1, len(logs) + 1))
 
-    entropy_stats = [
-        [np.mean(list(map(entropy, eps_probs))) for eps_probs in epoch["probs"]]
-        for epoch in logs
-    ]
+    # entropy_stats = [
+    #     [np.mean(list(map(entropy, eps_probs))) for eps_probs in epoch["probs"]]
+    #     for epoch in logs
+    # ]
+    entropy_stats = [epoch["entropy"] for epoch in logs]
 
     mu = np.array([np.mean(row) for row in entropy_stats])
     sigma = np.array([np.std(row) for row in entropy_stats])
