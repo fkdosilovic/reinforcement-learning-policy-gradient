@@ -1,0 +1,16 @@
+env: "LunarLander-v2"
+logs: "lunar_lander_v2_logs_v4.json"
+
+hidden_layers: [96, 96, 96]
+gamma: 0.99
+
+lr: 0.00075
+n_epochs: 300
+batch_size: 64
+n_dbg: 20
+
+min_entropy: 0.435 # Choose optimal action in 80% of the cases.
+max_entropy: 1.386
+n_avg: 10
+
+model: "lunarlander2_v4_140_240.13.pth"
