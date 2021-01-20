@@ -29,11 +29,11 @@ def compute_baseline(rewards_batch, gamma=1.0):
 
 
 def vpg(batch, agent, optimizer, gamma=1.0):
-    baseline = compute_baseline([rewards for _, _, _, rewards in batch], gamma)
+    """Implements a vanilla policy gradient with time-dependend average
+    baseline."""
 
-    # Since Var(X - E[X]) = Var(X), we can standardize the baseline by
-    # writing:
-    baseline -= torch.mean(baseline)
+    baseline = compute_baseline([rewards for _, _, _, rewards in batch], gamma)
+    baseline -= torch.mean(baseline)  # Var(X - E[X]) = Var(X)
     baseline /= torch.std(baseline)  # Possible division by zero!
 
     loss = 0
@@ -42,8 +42,7 @@ def vpg(batch, agent, optimizer, gamma=1.0):
 
         # Compute rewards-to-go.
         rewards_to_go = compute_reward_to_go(eps_rewards, gamma)
-
-        rewards_to_go -= torch.mean(rewards_to_go)
+        rewards_to_go -= torch.mean(rewards_to_go)  # Var(X - E[X]) = Var(X)
         rewards_to_go /= torch.std(rewards_to_go)  # Possible division by zero!
 
         episode_probs_action = zip(eps_probs, eps_actions)
@@ -51,6 +50,8 @@ def vpg(batch, agent, optimizer, gamma=1.0):
             dist = distributions.Categorical(probs=action_probs)
             advantage = rewards_to_go[i] - baseline[i]
             loss += -dist.log_prob(action) * advantage
+
+    loss /= len(batch)
 
     # Clear gradients.
     optimizer.zero_grad()
