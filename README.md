@@ -6,13 +6,29 @@ course.
 
 ## Results
 
-### CartPole-v0
+### Vanilla policy gradient
+#### CartPole-v0
 
 The following figures show results for two runs of vanilla policy gradient algorithm.
 
-![CartPole-v0 first results](static/cartpole_v0_stats1.png | width=110)
-![CartPole-v0 first results](static/cartpole_v0_stats2.png | width=110)
+<img src="static/cartpole_v0_stats1.png" width="110%">
+<img src="static/cartpole_v0_stats2.png" width="110%">
 
+
+#### LunarLander-v2
+
+<img src="static/lunar_lander_v2_stats3.png" width="110%">
+<img src="static/lunar_lander_v2_stats4.png" width="110%">
+
+### Off-policy VPG with importance sampling
+
+- TODO
+
+
+### Cross entropy
+
+- TODO
+  
 ## Resources
 
 ### Papers:
