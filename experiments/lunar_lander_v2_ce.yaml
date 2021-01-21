@@ -1,0 +1,18 @@
+env: "LunarLander-v2"
+logs: "lunar_lander_v2_ce_logs_v1.json"
+
+hidden_layers: [128, 128]
+gamma: 0.99
+
+# Cross entropy params.
+n_epochs: 50
+n_samples: 32
+eval_samples: 16
+p: 0.25
+
+n_dbg: 5
+
+min_entropy: 0.325 # Choose optimal action in 90% of the cases.
+max_entropy: 0.693
+n_avg: 5
+# model: "lunarlander2_v4_140_240.13.pth"
