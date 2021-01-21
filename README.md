@@ -17,8 +17,8 @@ The following figures show results for two runs of vanilla policy gradient algor
 
 #### LunarLander-v2
 
-<img src="static/lunar_lander_v2_stats3.png" width="110%">
-<img src="static/lunar_lander_v2_stats4.png" width="110%">
+<img src="static/lunar_lander_v2_stats3.png" width="90%">
+<img src="static/lunar_lander_v2_stats4.png" width="90%">
 
 ### Off-policy VPG with importance sampling
 
