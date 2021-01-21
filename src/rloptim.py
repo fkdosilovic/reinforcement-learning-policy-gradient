@@ -1,5 +1,10 @@
 import torch
 from torch import distributions
+from torch.nn import utils
+
+import rlsim
+import rlstats
+import rlutils
 
 
 def compute_reward_to_go(rewards, gamma: float = 1.0):
@@ -61,3 +66,52 @@ def vpg(batch, agent, optimizer, gamma=1.0):
 
     # Gradient descent.
     optimizer.step()
+
+
+def cross_entropy(env, agent, params):
+
+    mu = utils.parameters_to_vector(agent.policy.parameters())
+    sigma = torch.ones_like(mu)
+
+    n_epochs = params["n_epochs"]
+    n_samples = params["n_samples"]
+    eval_samples = params["eval_samples"]
+    top_p_per = int(n_samples * params["p"])
+
+    # Create agents.
+    agents = [agent.__class__(*agent.params) for _ in range(n_samples)]
+
+    for epoch in range(1, n_epochs + 1):
+        # Collect n samples of sigma_i from N(mu, diag(sigma))
+        theta = torch.stack(
+            [torch.normal(mean=mu, std=sigma) for _ in range(n_samples)]
+        )
+
+        # To each agent, assign one of the sampled param vector.
+        for agent, th in zip(agents, theta):
+            utils.vector_to_parameters(th, agent.policy.parameters())
+
+        results = []
+        # Evaluate each agent.
+        for i, agent in enumerate(agents):
+            batch = [rlsim.simulate(env, agent) for _ in range(eval_samples)]
+            average_return = rlstats.calc_average_return(
+                rlutils.extract_rewards(batch)
+            )
+
+            results.append((i, average_return))
+
+        best_results = sorted(results, key=lambda x: x[1])[-top_p_per:]
+        elite_set_indices = list(map(lambda x: x[0], best_results))
+
+        print(
+            f"Best average return for epoch {epoch} is {best_results[-1][1]}."
+        )
+
+        elite_set = theta[elite_set_indices]
+
+        # Re-fit Gaussian to the best results.
+        mu = torch.mean(elite_set, dim=0)
+        sigma = torch.std(elite_set, dim=0)
+
+    return mu
