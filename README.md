@@ -10,8 +10,8 @@ course.
 
 The following figures show results for two runs of vanilla policy gradient algorithm.
 
-![CartPole-v0 first results](static/cartpole_v0_stats1.png)
-![CartPole-v0 first results](static/cartpole_v0_stats2.png)
+![CartPole-v0 first results](static/cartpole_v0_stats1.png | width=110)
+![CartPole-v0 first results](static/cartpole_v0_stats2.png | width=110)
 
 ## Resources
 
