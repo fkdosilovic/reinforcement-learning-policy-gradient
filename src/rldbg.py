@@ -96,4 +96,7 @@ def main(params_yaml_path):
 
 
 if __name__ == "__main__":
-    main(os.path.join(experiments_dir, sys.argv[1]))
+    condition = "experiments" not in sys.argv[1]
+    main(
+        os.path.join(experiments_dir if condition else project_dir, sys.argv[1])
+    )
