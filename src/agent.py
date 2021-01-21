@@ -20,6 +20,7 @@ def create_multilayer_perceptron(layers_dim):
 
 class DiscreteLinearAgent:
     def __init__(self, n_features, n_actions, degree=1):
+        self.params = (n_features, n_actions, degree)
         n_features = int(binom(n_features + degree, degree))
         self.policy = torch.nn.Sequential(
             torch.nn.Linear(n_features, n_actions, bias=False),
@@ -29,11 +30,11 @@ class DiscreteLinearAgent:
 
         self.transform = PolynomialFeatures(degree=degree).fit_transform
 
-    def sample_action(self, state: np.ndarray):
+    def sample_action(self, state):
         """Samples an action."""
         state = self.transform(state)
         if not isinstance(state, torch.Tensor):
-            state = torch.as_tensor(state, dtype=torch.float32)
+            state = torch.FloatTensor(state)
 
         probs = torch.FloatTensor(self.policy.forward(state))
         return (torch.multinomial(probs, 1), probs)
@@ -42,7 +43,7 @@ class DiscreteLinearAgent:
         """Selects action with the highest probability."""
         state = self.transform(state)
         if not isinstance(state, torch.Tensor):
-            state = torch.as_tensor(state, dtype=torch.float32)
+            state = torch.FloatTensor(state)
 
         return torch.argmax(self.policy.forward(state)), None
 
@@ -51,6 +52,7 @@ class DiscreteMLPAgent:
     """Implements an agent with neural network policy."""
 
     def __init__(self, layers):
+        self.params = (layers,)
         self.policy = create_multilayer_perceptron(layers)
 
     def sample_action(self, state):
